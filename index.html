@@ -110,13 +110,14 @@
             <form id="bulkForm" class="space-y-4 hidden">
               <div>
                 <label for="inputBulk" class="block text-sm font-medium text-slate-700 mb-1">
-                  Paste Word List (Tab separated)
+                  Paste Word List (Tab separated OR JSON)
                 </label>
                 <p class="text-xs text-slate-500 mb-2">
                   Paste from Excel/Sheets. We'll automatically detect which column is RTL (e.g. Hebrew) and assign it to
                   the Back.
                 </p>
-                <textarea id="inputBulk" rows="6" placeholder="Word 1    Word 2&#10;Next      Phrase..."
+                <textarea id="inputBulk" rows="6"
+                  placeholder="Word 1    Word 2&#10;Next      Phrase...&#10;&#10;OR paste JSON:&#10;[{&quot;front&quot;:&quot;Hello&quot;, &quot;back&quot;:&quot;Shalom&quot;}]"
                   class="w-full px-4 py-2 rounded-md border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all font-mono text-sm"></textarea>
               </div>
               <button type="submit" id="btnAddBulk" disabled
@@ -265,36 +266,6 @@
 
     // --- STATE ---
     let words = [...INITIAL_WORDS];
-
-    // Check for "data" URL parameter
-    try {
-      const urlParams = new URLSearchParams(window.location.search);
-      const dataParam = urlParams.get('data');
-      if (dataParam) {
-        const parsedContext = JSON.parse(decodeURIComponent(dataParam));
-        if (Array.isArray(parsedContext)) {
-          // Normalize structure if needed, or just assume {front, back} (or english, hebrew for compat)
-          const validWords = parsedContext.map((w, i) => {
-            let front = w.front || w.english;
-            let back = w.back || w.hebrew;
-            if (front && back) {
-              return {
-                id: Date.now().toString() + i,
-                front,
-                back
-              };
-            }
-            return null;
-          }).filter(Boolean);
-
-          if (validWords.length > 0) {
-            words = validWords;
-          }
-        }
-      }
-    } catch (e) {
-      console.warn("Failed to parse 'data' URL parameter:", e);
-    }
 
     // --- PDF SERVICE LOGIC ---
 
@@ -573,44 +544,71 @@
         const text = inputBulk.value;
         if (!text.trim()) return;
 
-        const lines = text.split(/\r?\n/);
-
-        // REPLACEMENT LOGIC: Clear existing list
-        words = [];
         let addedCount = 0;
 
-        lines.forEach(line => {
-          if (!line.trim()) return;
-          let parts = line.split('\t');
-
-          if (parts.length < 2) {
-            const spaceParts = line.split(/\s{2,}/);
-            if (spaceParts.length >= 2) parts = spaceParts;
-            else return;
+        // Try parsing as JSON first
+        try {
+          // Attempt to fix common "lazy" JSON issues like single quotes
+          let jsonText = text;
+          if (!text.trim().startsWith('{') && !text.trim().startsWith('[')) {
+            // If it doesn't look like JSON, it might be just text.
+            // But if it looks like python dict list: [{'a':'b'}]
+          }
+          // Simple replace of single quotes to double quotes for keys/values if it looks like JSON
+          if (text.trim().startsWith('[') || text.trim().startsWith('{')) {
+            jsonText = text.replace(/'/g, '"');
           }
 
-          if (parts.length < 2) return;
-
-          let col1 = parts[0].trim();
-          let col2 = parts[1].trim();
-
-          const hebrewRegex = /[\u0590-\u05FF]/;
-          const col1IsHebrew = hebrewRegex.test(col1);
-          const col2IsHebrew = hebrewRegex.test(col2);
-
-          let front = col1;
-          let back = col2;
-
-          if (col1IsHebrew && !col2IsHebrew) {
-            front = col2;
-            back = col1;
+          const jsonData = JSON.parse(jsonText);
+          if (Array.isArray(jsonData)) {
+            words = [];
+            jsonData.forEach(item => {
+              let front = item.front || item.english;
+              let back = item.back || item.hebrew;
+              if (front && back) {
+                addWord(front, back);
+                addedCount++;
+              }
+            });
           }
+        } catch (e) {
+          // Not JSON, assume tab-separated
+          const lines = text.split(/\r?\n/);
+          words = []; // Clear existing list if we start adding items
 
-          if (front && back) {
-            addWord(front, back);
-            addedCount++;
-          }
-        });
+          lines.forEach(line => {
+            if (!line.trim()) return;
+            let parts = line.split('\t');
+
+            if (parts.length < 2) {
+              const spaceParts = line.split(/\s{2,}/);
+              if (spaceParts.length >= 2) parts = spaceParts;
+              else return;
+            }
+
+            if (parts.length < 2) return;
+
+            let col1 = parts[0].trim();
+            let col2 = parts[1].trim();
+
+            const hebrewRegex = /[\u0590-\u05FF]/;
+            const col1IsHebrew = hebrewRegex.test(col1);
+            const col2IsHebrew = hebrewRegex.test(col2);
+
+            let front = col1;
+            let back = col2;
+
+            if (col1IsHebrew && !col2IsHebrew) {
+              front = col2;
+              back = col1;
+            }
+
+            if (front && back) {
+              addWord(front, back);
+              addedCount++;
+            }
+          });
+        }
 
         if (addedCount > 0) {
           inputBulk.value = '';
