@@ -1,0 +1,5 @@
+{
+  "name": "Flashcard Generator",
+  "description": "A tool to create print-ready, double-sided Hebrew-English flashcards with PDF export.",
+  "requestFramePermissions": []
+}
