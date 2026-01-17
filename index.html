@@ -37,10 +37,17 @@
           <p class="text-xs text-slate-500 font-medium">Hebrew / English Duplex Tool</p>
         </div>
       </div>
-      <div
-        class="hidden sm:flex items-center gap-2 text-sm text-slate-500 bg-slate-50 px-3 py-1.5 rounded-full border border-slate-200">
-        <i data-lucide="info" class="w-3.5 h-3.5"></i>
-        <span>Works best with duplex (double-sided) printing</span>
+      <div class="flex items-center gap-2">
+        <button id="btnSettings"
+          class="text-slate-500 hover:text-indigo-600 transition-colors bg-slate-50 p-2 rounded-full border border-slate-200"
+          title="Settings (API Key)">
+          <i data-lucide="settings" class="w-4 h-4"></i>
+        </button>
+        <div
+          class="hidden sm:flex items-center gap-2 text-sm text-slate-500 bg-slate-50 px-3 py-1.5 rounded-full border border-slate-200">
+          <i data-lucide="info" class="w-3.5 h-3.5"></i>
+          <span>Works best with duplex (double-sided) printing</span>
+        </div>
       </div>
     </div>
   </header>
@@ -61,7 +68,7 @@
             </h2>
 
             <!-- Toggle Buttons -->
-            <div class="flex gap-2 mb-4 text-sm">
+            <div class="flex gap-2 mb-4 text-sm items-center">
               <button id="btnSingleMode"
                 class="px-3 py-1.5 rounded-full transition-colors bg-indigo-100 text-indigo-700 font-medium">
                 Single Entry
@@ -70,6 +77,14 @@
                 class="px-3 py-1.5 rounded-full transition-colors text-slate-500 hover:bg-slate-50">
                 Bulk Add
               </button>
+              <div class="h-4 w-px bg-slate-300 mx-1"></div>
+              <button id="btnImageMode"
+                class="px-3 py-1.5 rounded-full transition-colors text-slate-500 hover:bg-slate-50 flex items-center gap-1"
+                title="Scan Image">
+                <i data-lucide="camera" class="w-4 h-4"></i>
+                <span class="hidden sm:inline">Scan</span>
+              </button>
+              <input type="file" id="fileInput" accept="image/*" class="hidden">
             </div>
 
             <!-- Single Entry Form -->
@@ -193,6 +208,45 @@
     </div>
   </main>
 
+  <!-- Settings Modal -->
+  <div id="settingsModal" class="fixed inset-0 bg-slate-900/50 hidden items-center justify-center z-50">
+    <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-md mx-4">
+      <h3 class="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+        <i data-lucide="key" class="w-5 h-5 text-indigo-600"></i>
+        API Configuration
+      </h3>
+      <p class="text-sm text-slate-600 mb-4">
+        To use the image scanning feature, you need to provide your own Google Gemini API Key.
+        It will be stored locally in your browser.
+      </p>
+      <div class="mb-4">
+        <label for="apiKeyInput" class="block text-sm font-medium text-slate-700 mb-1">Gemini API Key</label>
+        <input type="password" id="apiKeyInput" placeholder="AIzaSy..."
+          class="w-full px-4 py-2 rounded-md border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all font-mono text-sm">
+        <p class="text-xs text-slate-500 mt-1">
+          Don't have one? <a href="https://aistudio.google.com/app/apikey" target="_blank"
+            class="text-indigo-600 hover:underline">Get a key from Google AI Studio</a>.
+        </p>
+      </div>
+      <div class="flex justify-end gap-2">
+        <button id="btnCancelSettings"
+          class="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-md transition-colors font-medium">Cancel</button>
+        <button id="btnSaveSettings"
+          class="px-4 py-2 bg-indigo-600 text-white hover:bg-indigo-700 rounded-md transition-colors font-medium">Save
+          Key</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading Overlay -->
+  <div id="loadingOverlay" class="fixed inset-0 bg-slate-900/50 hidden items-center justify-center z-50">
+    <div class="bg-white rounded-lg shadow-xl p-8 flex flex-col items-center">
+      <div class="animate-spin rounded-full h-10 w-10 border-4 border-indigo-200 border-t-indigo-600 mb-4"></div>
+      <p class="font-medium text-slate-800">Processing Image...</p>
+      <p class="text-sm text-slate-500">Extracting words with Gemini AI</p>
+    </div>
+  </div>
+
   <script>
     // --- CONSTANTS ---
     const INITIAL_WORDS = [
@@ -212,6 +266,41 @@
     let words = [...INITIAL_WORDS];
 
     // --- PDF SERVICE LOGIC ---
+
+    // --- GEMINI API LOGIC ---
+    const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent";
+
+    async function callGeminiAPI(apiKey, imageBase64) {
+      // Strip header if present (data:image/jpeg;base64,)
+      const base64Data = imageBase64.split(',')[1] || imageBase64;
+
+      const payload = {
+        contents: [{
+          parts: [
+            { text: "Analyze this image. It contains a list of English and Hebrew word pairs. Extract them into a JSON array of objects with 'english' and 'hebrew' keys. Return ONLY the JSON array, no markdown formatting." },
+            { inline_data: { mime_type: "image/jpeg", data: base64Data } }
+          ]
+        }]
+      };
+
+      const response = await fetch(`${GEMINI_API_URL}?key=${apiKey}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.error?.message || 'Failed to call Gemini API');
+      }
+
+      const data = await response.json();
+      const text = data.candidates[0].content.parts[0].text;
+
+      // Clean markdown code blocks if present
+      const jsonStr = text.replace(/```json/g, '').replace(/```/g, '').trim();
+      return JSON.parse(jsonStr);
+    }
 
 
     const FONT_NAME = 'NotoSerifHebrew';
@@ -328,10 +417,20 @@
                             ${index + 1}
                         </div>
                         <div class="col-span-5 font-medium text-slate-800">
-                            ${word.english}
+                             <input type="text"
+                                value="${word.english}"
+                                oninput="updateWord(${index}, 'english', this.value)"
+                                class="w-full bg-transparent border-b border-transparent hover:border-slate-300 focus:border-indigo-500 focus:ring-0 px-1 py-0.5 transition-colors outline-none"
+                                aria-label="Edit English word"
+                            />
                         </div>
-                        <div class="col-span-5 text-right font-medium text-slate-800 hebrew-text" dir="rtl">
-                            ${word.hebrew}
+                        <div class="col-span-5 text-right font-medium text-slate-800" dir="rtl">
+                             <input type="text"
+                                value="${word.hebrew}"
+                                oninput="updateWord(${index}, 'hebrew', this.value)"
+                                class="w-full bg-transparent border-b border-transparent hover:border-slate-300 focus:border-indigo-500 focus:ring-0 px-1 py-0.5 transition-colors outline-none text-right hebrew-text"
+                                aria-label="Edit Hebrew word"
+                            />
                         </div>
                         <div class="col-span-1 flex justify-end">
                             <button onclick="deleteWord('${word.id}')" 
@@ -353,6 +452,15 @@
       const btnOpen = document.getElementById('btnOpen');
       if (btnOpen) btnOpen.disabled = words.length === 0;
     }
+
+    // Exposed globally for inline editing
+    window.updateWord = (index, field, value) => {
+      if (words[index]) {
+        words[index][field] = value; // Don't trim immediately to allow typing spaces
+
+        // Optional: Debounce sync if we were saving to DB
+      }
+    };
 
     function addWord(english, hebrew) {
       const word = {
@@ -435,6 +543,9 @@
         if (!text.trim()) return;
 
         const lines = text.split(/\r?\n/);
+
+        // REPLACEMENT LOGIC: Clear existing list
+        words = [];
         let addedCount = 0;
 
         lines.forEach(line => {
@@ -515,6 +626,110 @@
 
       btnDownload.addEventListener('click', () => handlePdfAction('download'));
       btnOpen.addEventListener('click', () => handlePdfAction('open'));
+
+      // --- SETTINGS LOGIC ---
+      const settingsModal = document.getElementById('settingsModal');
+      const apiKeyInput = document.getElementById('apiKeyInput');
+      const modelNameInput = document.getElementById('modelNameInput');
+      const btnSettings = document.getElementById('btnSettings');
+      const btnSaveSettings = document.getElementById('btnSaveSettings');
+      const btnCancelSettings = document.getElementById('btnCancelSettings');
+
+      // Load saved key & model
+      const savedKey = localStorage.getItem('GEMINI_API_KEY');
+      if (savedKey) apiKeyInput.value = savedKey;
+
+      const savedModel = localStorage.getItem('GEMINI_MODEL');
+      if (savedModel) modelNameInput.value = savedModel;
+
+      btnSettings.addEventListener('click', () => {
+        settingsModal.classList.remove('hidden');
+        settingsModal.classList.add('flex');
+      });
+
+      const closeSettings = () => {
+        settingsModal.classList.add('hidden');
+        settingsModal.classList.remove('flex');
+      };
+
+      btnCancelSettings.addEventListener('click', closeSettings);
+
+      btnSaveSettings.addEventListener('click', () => {
+        const key = apiKeyInput.value.trim();
+        if (key) {
+          localStorage.setItem('GEMINI_API_KEY', key);
+          closeSettings();
+          alert('API Key saved!');
+        } else {
+          alert('Please enter a valid API Key');
+        }
+      });
+
+      // --- IMAGE UPLOAD LOGIC ---
+      const btnImageMode = document.getElementById('btnImageMode');
+      const fileInput = document.getElementById('fileInput');
+      const loadingOverlay = document.getElementById('loadingOverlay');
+
+      btnImageMode.addEventListener('click', () => {
+        const key = localStorage.getItem('GEMINI_API_KEY');
+        if (!key) {
+          alert('Please configure your Gemini API Key in Settings first.');
+          settingsModal.classList.remove('hidden');
+          settingsModal.classList.add('flex');
+          return;
+        }
+        fileInput.click();
+      });
+
+      fileInput.addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const key = localStorage.getItem('GEMINI_API_KEY');
+        if (!key) return; // Should be handled by click check, but safety first
+
+        loadingOverlay.classList.remove('hidden');
+        loadingOverlay.classList.add('flex');
+
+        try {
+          // Read file
+          const reader = new FileReader();
+          reader.onload = async (event) => {
+            try {
+              const result = await callGeminiAPI(key, event.target.result);
+
+              // REPLACEMENT LOGIC: Clear existing list
+              words = [];
+              let addedCount = 0;
+              if (Array.isArray(result)) {
+                result.forEach(pair => {
+                  if (pair.english && pair.hebrew) {
+                    addWord(pair.english, pair.hebrew);
+                    addedCount++;
+                  }
+                });
+              }
+
+              fileInput.value = ''; // Reset
+              alert(`Successfully extracted and added ${addedCount} word pairs!`);
+
+            } catch (err) {
+              console.error(err);
+              alert('Error analyzing image: ' + err.message);
+            } finally {
+              loadingOverlay.classList.add('hidden');
+              loadingOverlay.classList.remove('flex');
+            }
+          };
+          reader.readAsDataURL(file);
+
+        } catch (err) {
+          loadingOverlay.classList.add('hidden');
+          loadingOverlay.classList.remove('flex');
+          alert('Error reading file');
+        }
+      });
+
     });
   </script>
 </body>

@@ -7,8 +7,10 @@ A standalone, static HTML application for generating printable English/Hebrew fl
 ## Features
 
 *   **Zero Dependencies**: Runs entirely in the browser. No node.js, npm, or server required.
-*   **Offline Support**: Hebrew fonts are embedded directly in the file, ensuring PDF generation works even without an internet connection or on restrictive corporate networks.
-*   **Bulk Import**: Paste word lists directly from Excel or Google Sheets.
+*   **Offline Support**: Hebrew fonts are embedded directly in the file, ensuring PDF generation works even without an internet connection (AI features require internet).
+*   **AI Image Scanning**: Extract word pairs directly from images using Google Gemini API.
+*   **Smart Bulk Import**: Paste word lists from Excel/Sheets. Automatically detects Hebrew/English columns and replaces the current list.
+*   **Inline Editing**: Click any word in the list to edit it directly.
 *   **Duplex Printing**: Automatically formats PDFs for double-sided printing (Hebrew on front, English mirrored on back).
 
 ## How to Run
@@ -27,6 +29,13 @@ A standalone, static HTML application for generating printable English/Hebrew fl
 4.  **Printer Settings**:
     *   Select **Two-Sided (Duplex)** printing.
     *   Choose **Flip on Long Edge**.
+
+## AI Configuration (Optional)
+
+To use the **Image Scan** feature:
+1.  Click the **Settings** (gear) icon in the top right.
+2.  Enter your [Google Gemini API Key](https://aistudio.google.com/app/apikey).
+3.   The key is stored locally in your browser.
 
 ## Deployment
 
