@@ -6,8 +6,43 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>FlashcardGen - Hebrew/English Duplex Tool</title>
 
+  <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700;900&amp;display=swap"
+    rel="stylesheet" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+    rel="stylesheet" />
+
   <!-- Tailwind CSS -->
-  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "primary": "#069d7f",
+            "primary-dark": "#058c70",
+            "background-light": "#f6f7f9",
+            "background-dark": "#19202e",
+            "surface-light": "#ffffff",
+            "surface-dark": "#232d3f",
+            "text-main-light": "#111817",
+            "text-main-dark": "#f0f5f4",
+            "text-secondary-light": "#5f8c83",
+            "text-secondary-dark": "#9abcb6",
+          },
+          fontFamily: {
+            "display": ["Lexend", "sans-serif"]
+          },
+          borderRadius: { "DEFAULT": "0.25rem", "md": "0.5rem", "lg": "0.75rem", "xl": "1rem", "2xl": "1.5rem", "full": "9999px" },
+          boxShadow: {
+            'soft': '0 4px 20px -2px rgba(6, 157, 127, 0.15)',
+            'card': '0 2px 8px -2px rgba(0,0,0,0.05)',
+          }
+        },
+      },
+    }
+  </script>
 
   <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
@@ -23,28 +58,30 @@
   </style>
 </head>
 
-<body class="bg-slate-50 min-h-screen pb-12">
+<body class="bg-background-light min-h-screen pb-12 font-display text-text-main-light antialiased">
 
   <!-- Header -->
-  <header class="bg-white border-b border-slate-200 sticky top-0 z-10">
+  <header class="bg-surface-light border-b border-gray-200 sticky top-0 z-10">
     <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-      <div class="flex items-center gap-3">
-        <div class="bg-indigo-600 p-2 rounded-lg text-white">
-          <i data-lucide="languages" class="w-6 h-6"></i>
+      <div class="flex items-center gap-2">
+        <!-- Tiny Logo representation -->
+        <div class="h-6 w-5 bg-primary rounded-sm -skew-x-6 flex items-center justify-center">
+          <span class="material-symbols-outlined text-white text-[16px]"
+            style="font-variation-settings: 'FILL' 1;">bolt</span>
         </div>
         <div>
-          <h1 class="text-xl font-bold text-slate-900 tracking-tight">FlashcardGen</h1>
-          <p class="text-xs text-slate-500 font-medium">Duplex Flashcard Tool</p>
+          <h1 class="text-xl font-bold tracking-tight text-text-main-light dark:text-white">FlashcardGen</h1>
+          <p class="text-xs text-text-secondary-light font-medium">Duplex Flashcard Tool</p>
         </div>
       </div>
       <div class="flex items-center gap-2">
         <button id="btnSettings"
-          class="text-slate-500 hover:text-indigo-600 transition-colors bg-slate-50 p-2 rounded-full border border-slate-200"
+          class="text-text-secondary-light hover:text-primary transition-colors bg-surface-light p-2 rounded-full border border-gray-200"
           title="Settings (API Key)">
           <i data-lucide="settings" class="w-4 h-4"></i>
         </button>
         <div
-          class="hidden sm:flex items-center gap-2 text-sm text-slate-500 bg-slate-50 px-3 py-1.5 rounded-full border border-slate-200">
+          class="hidden sm:flex items-center gap-2 text-sm text-text-secondary-light bg-surface-light px-3 py-1.5 rounded-full border border-gray-200">
           <i data-lucide="info" class="w-3.5 h-3.5"></i>
           <span>Works best with duplex (double-sided) printing</span>
         </div>
@@ -61,25 +98,25 @@
         <div class="lg:sticky lg:top-24 space-y-6">
 
           <!-- Add New Card Section -->
-          <div class="bg-white p-6 rounded-lg border border-slate-200 shadow-sm">
-            <h2 class="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
-              <i data-lucide="plus" class="w-5 h-5 text-indigo-600"></i>
+          <div class="bg-surface-light p-6 rounded-lg border border-gray-200 shadow-sm">
+            <h2 class="text-lg font-semibold text-text-main-light mb-4 flex items-center gap-2">
+              <span class="material-symbols-outlined text-primary">add_circle</span>
               Add New Card
             </h2>
 
             <!-- Toggle Buttons -->
             <div class="flex gap-2 mb-4 text-sm items-center">
               <button id="btnSingleMode"
-                class="px-3 py-1.5 rounded-full transition-colors bg-indigo-100 text-indigo-700 font-medium">
+                class="px-3 py-1.5 rounded-full transition-colors bg-primary/10 text-primary font-medium">
                 Single Entry
               </button>
               <button id="btnBulkMode"
-                class="px-3 py-1.5 rounded-full transition-colors text-slate-500 hover:bg-slate-50">
+                class="px-3 py-1.5 rounded-full transition-colors text-text-secondary-light hover:bg-background-light">
                 Bulk Add
               </button>
-              <div class="h-4 w-px bg-slate-300 mx-1"></div>
+              <div class="h-4 w-px bg-gray-300 mx-1"></div>
               <button id="btnImageMode"
-                class="px-3 py-1.5 rounded-full transition-colors text-slate-500 hover:bg-slate-50 flex items-center gap-1"
+                class="px-3 py-1.5 rounded-full transition-colors text-text-secondary-light hover:bg-background-light flex items-center gap-1"
                 title="Scan Image">
                 <i data-lucide="camera" class="w-4 h-4"></i>
                 <span class="hidden sm:inline">Scan</span>
@@ -90,18 +127,18 @@
             <!-- Single Entry Form -->
             <form id="singleForm" class="space-y-4">
               <div>
-                <label for="inputFront" class="block text-sm font-medium text-slate-700 mb-1">Front</label>
+                <label for="inputFront" class="block text-sm font-medium text-text-main-light mb-1">Front</label>
                 <input type="text" id="inputFront" placeholder="e.g. Apple"
-                  class="w-full px-4 py-2 rounded-md border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all">
+                  class="w-full px-4 py-2 rounded-md border border-gray-300 focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all">
               </div>
               <div>
-                <label for="inputBack" class="block text-sm font-medium text-slate-700 mb-1">Back</label>
+                <label for="inputBack" class="block text-sm font-medium text-text-main-light mb-1">Back</label>
                 <input type="text" id="inputBack" dir="rtl" placeholder="e.g. תפוח"
-                  class="w-full px-4 py-2 rounded-md border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all hebrew-text">
+                  class="w-full px-4 py-2 rounded-md border border-gray-300 focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all hebrew-text">
               </div>
               <button type="submit" id="btnAddSingle" disabled
-                class="w-full bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-medium py-2 px-4 rounded-md transition-colors flex items-center justify-center gap-2">
-                <i data-lucide="plus" class="w-4.5 h-4.5"></i>
+                class="w-full bg-primary hover:bg-primary-dark disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-medium py-2 px-4 rounded-md transition-colors flex items-center justify-center gap-2">
+                <span class="material-symbols-outlined text-[20px]">add</span>
                 Add to List
               </button>
             </form>
@@ -109,42 +146,42 @@
             <!-- Bulk Entry Form (Hidden by default) -->
             <form id="bulkForm" class="space-y-4 hidden">
               <div>
-                <label for="inputBulk" class="block text-sm font-medium text-slate-700 mb-1">
+                <label for="inputBulk" class="block text-sm font-medium text-text-main-light mb-1">
                   Paste Word List (Tab separated OR JSON)
                 </label>
-                <p class="text-xs text-slate-500 mb-2">
+                <p class="text-xs text-text-secondary-light mb-2">
                   Paste from Excel/Sheets. We'll automatically detect which column is RTL (e.g. Hebrew) and assign it to
                   the Back.
                 </p>
                 <textarea id="inputBulk" rows="6"
                   placeholder="Word 1    Word 2&#10;Next      Phrase...&#10;&#10;OR paste JSON:&#10;[{&quot;front&quot;:&quot;Hello&quot;, &quot;back&quot;:&quot;Shalom&quot;}]"
-                  class="w-full px-4 py-2 rounded-md border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all font-mono text-sm"></textarea>
+                  class="w-full px-4 py-2 rounded-md border border-gray-300 focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all font-mono text-sm"></textarea>
               </div>
               <button type="submit" id="btnAddBulk" disabled
-                class="w-full bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-medium py-2 px-4 rounded-md transition-colors flex items-center justify-center gap-2">
-                <i data-lucide="file-text" class="w-4.5 h-4.5"></i>
+                class="w-full bg-primary hover:bg-primary-dark disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-medium py-2 px-4 rounded-md transition-colors flex items-center justify-center gap-2">
+                <span class="material-symbols-outlined text-[20px]">description</span>
                 Process List
               </button>
             </form>
           </div>
 
           <!-- Download Section -->
-          <div class="bg-indigo-50 p-6 rounded-lg border border-indigo-100">
-            <h3 class="text-indigo-900 font-semibold mb-2">Ready to Print?</h3>
-            <p class="text-indigo-700 text-sm mb-4">
+          <div class="bg-primary/5 p-6 rounded-lg border border-primary/10">
+            <h3 class="text-primary-dark font-semibold mb-2">Ready to Print?</h3>
+            <p class="text-text-secondary-light text-sm mb-4">
               Generates a double-sided PDF (A4).
               <br>
               <span class="opacity-75 text-xs">Page 1: Back (RTL), Page 2: Front (LTR, Mirrored)</span>
             </p>
             <div class="flex flex-col gap-2">
               <button id="btnDownload" disabled
-                class="w-full bg-white text-indigo-700 border border-indigo-200 hover:bg-indigo-50 hover:border-indigo-300 font-medium py-2 px-4 rounded-md transition-colors flex items-center justify-center gap-2 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
-                <i data-lucide="download" class="w-4.5 h-4.5"></i>
+                class="w-full bg-surface-light text-primary border border-gray-200 hover:bg-background-light hover:border-primary/30 font-medium py-2 px-4 rounded-md transition-colors flex items-center justify-center gap-2 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
+                <span class="material-symbols-outlined text-[20px]">download</span>
                 <span id="downloadText">Download PDF</span>
               </button>
               <button id="btnOpen" disabled
-                class="w-full bg-indigo-50 text-indigo-700 border border-transparent hover:bg-indigo-100 font-medium py-2 px-4 rounded-md transition-colors flex items-center justify-center gap-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed">
-                <i data-lucide="external-link" class="w-4 h-4"></i>
+                class="w-full bg-primary/10 text-primary border border-transparent hover:bg-primary/20 font-medium py-2 px-4 rounded-md transition-colors flex items-center justify-center gap-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed">
+                <span class="material-symbols-outlined text-[18px]">open_in_new</span>
                 <span>Open in New Tab</span>
               </button>
             </div>
@@ -157,16 +194,17 @@
       <!-- Right Column: List -->
       <div class="lg:col-span-8 lg:order-1">
         <div class="flex items-center justify-between mb-4">
-          <h2 class="text-lg font-semibold text-slate-800">Your Word List</h2>
-          <span id="wordCountBadge" class="text-sm font-medium text-slate-500 bg-slate-100 px-2 py-1 rounded">
+          <h2 class="text-lg font-semibold text-text-main-light">Your Word List</h2>
+          <span id="wordCountBadge"
+            class="text-sm font-medium text-text-secondary-light bg-surface-light px-2 py-1 rounded">
             0 items
           </span>
         </div>
 
-        <div id="wordList" class="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden">
+        <div id="wordList" class="bg-surface-light rounded-lg border border-gray-200 shadow-sm overflow-hidden">
           <!-- Word List Header -->
           <div
-            class="grid grid-cols-12 gap-4 p-4 bg-slate-50 border-b border-slate-200 text-sm font-semibold text-slate-600">
+            class="grid grid-cols-12 gap-4 p-4 bg-background-light border-b border-gray-200 text-sm font-semibold text-text-secondary-light">
             <div class="col-span-1 text-center">#</div>
             <div class="col-span-5">Front</div>
             <div class="col-span-5 text-right">Back</div>
@@ -174,23 +212,23 @@
           </div>
 
           <!-- Words Container -->
-          <div id="wordsContainer" class="divide-y divide-slate-100">
+          <div id="wordsContainer" class="divide-y divide-gray-100">
             <!-- Words will be injected here -->
           </div>
 
           <!-- Empty State -->
-          <div id="emptyState" class="text-center py-12 text-slate-400 bg-white">
+          <div id="emptyState" class="text-center py-12 text-gray-400 bg-surface-light">
             <p>No words added yet. Add some words to get started!</p>
           </div>
 
-          <div class="p-3 bg-slate-50 border-t border-slate-200 text-xs text-slate-500 text-center">
+          <div class="p-3 bg-background-light border-t border-gray-200 text-xs text-text-secondary-light text-center">
             <span id="totalCountFooter">0</span> cards total
           </div>
         </div>
 
         <!-- Print Instructions -->
-        <div class="mt-8 bg-blue-50 text-blue-800 p-4 rounded-lg text-sm border border-blue-100 flex gap-3">
-          <i data-lucide="info" class="shrink-0 mt-0.5 w-4.5 h-4.5"></i>
+        <div class="mt-8 bg-primary/5 text-primary-dark p-4 rounded-lg text-sm border border-primary/10 flex gap-3">
+          <span class="material-symbols-outlined text-[20px]">info</span>
           <div>
             <p class="font-semibold mb-1">Printing Instructions:</p>
             <ol class="list-decimal list-inside space-y-1 opacity-90">
@@ -211,41 +249,41 @@
   </main>
 
   <!-- Settings Modal -->
-  <div id="settingsModal" class="fixed inset-0 bg-slate-900/50 hidden items-center justify-center z-50">
-    <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-md mx-4">
-      <h3 class="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
-        <i data-lucide="key" class="w-5 h-5 text-indigo-600"></i>
+  <div id="settingsModal" class="fixed inset-0 bg-background-dark/50 hidden items-center justify-center z-50">
+    <div class="bg-surface-light rounded-lg shadow-xl p-6 w-full max-w-md mx-4">
+      <h3 class="text-lg font-bold text-text-main-light mb-4 flex items-center gap-2">
+        <span class="material-symbols-outlined text-primary">key</span>
         API Configuration
       </h3>
-      <p class="text-sm text-slate-600 mb-4">
+      <p class="text-sm text-text-secondary-light mb-4">
         To use the image scanning feature, you need to provide your own Google Gemini API Key.
         It will be stored locally in your browser.
       </p>
       <div class="mb-4">
-        <label for="apiKeyInput" class="block text-sm font-medium text-slate-700 mb-1">Gemini API Key</label>
+        <label for="apiKeyInput" class="block text-sm font-medium text-text-main-light mb-1">Gemini API Key</label>
         <input type="password" id="apiKeyInput" placeholder="AIzaSy..."
-          class="w-full px-4 py-2 rounded-md border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all font-mono text-sm">
-        <p class="text-xs text-slate-500 mt-1">
+          class="w-full px-4 py-2 rounded-md border border-gray-300 focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all font-mono text-sm">
+        <p class="text-xs text-text-secondary-light mt-1">
           Don't have one? <a href="https://aistudio.google.com/app/apikey" target="_blank"
-            class="text-indigo-600 hover:underline">Get a key from Google AI Studio</a>.
+            class="text-primary hover:underline">Get a key from Google AI Studio</a>.
         </p>
       </div>
       <div class="flex justify-end gap-2">
         <button id="btnCancelSettings"
-          class="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-md transition-colors font-medium">Cancel</button>
+          class="px-4 py-2 text-text-secondary-light hover:bg-background-light rounded-md transition-colors font-medium">Cancel</button>
         <button id="btnSaveSettings"
-          class="px-4 py-2 bg-indigo-600 text-white hover:bg-indigo-700 rounded-md transition-colors font-medium">Save
+          class="px-4 py-2 bg-primary text-white hover:bg-primary-dark rounded-md transition-colors font-medium">Save
           Key</button>
       </div>
     </div>
   </div>
 
   <!-- Loading Overlay -->
-  <div id="loadingOverlay" class="fixed inset-0 bg-slate-900/50 hidden items-center justify-center z-50">
-    <div class="bg-white rounded-lg shadow-xl p-8 flex flex-col items-center">
-      <div class="animate-spin rounded-full h-10 w-10 border-4 border-indigo-200 border-t-indigo-600 mb-4"></div>
-      <p class="font-medium text-slate-800">Processing Image...</p>
-      <p class="text-sm text-slate-500">Extracting words with Gemini AI</p>
+  <div id="loadingOverlay" class="fixed inset-0 bg-background-dark/50 hidden items-center justify-center z-50">
+    <div class="bg-surface-light rounded-lg shadow-xl p-8 flex flex-col items-center">
+      <div class="animate-spin rounded-full h-10 w-10 border-4 border-primary/30 border-t-primary mb-4"></div>
+      <p class="font-medium text-text-main-light">Processing Image...</p>
+      <p class="text-sm text-text-secondary-light">Extracting words with Gemini AI</p>
     </div>
   </div>
 
@@ -414,31 +452,31 @@
       } else {
         emptyState.classList.add('hidden');
         container.innerHTML = words.map((word, index) => `
-                    <div class="grid grid-cols-12 gap-4 p-4 items-center hover:bg-slate-50 transition-colors">
-                        <div class="col-span-1 text-center text-slate-400 font-mono text-xs">
+                    <div class="grid grid-cols-12 gap-4 p-4 items-center hover:bg-background-light transition-colors">
+                        <div class="col-span-1 text-center text-gray-400 font-mono text-xs">
                             ${index + 1}
                         </div>
-                        <div class="col-span-5 font-medium text-slate-800">
+                        <div class="col-span-5 font-medium text-text-main-light">
                              <input type="text"
                                 value="${word.front}"
                                 oninput="updateWord(${index}, 'front', this.value)"
-                                class="w-full bg-transparent border-b border-transparent hover:border-slate-300 focus:border-indigo-500 focus:ring-0 px-1 py-0.5 transition-colors outline-none"
+                                class="w-full bg-transparent border-b border-transparent hover:border-gray-300 focus:border-primary focus:ring-0 px-1 py-0.5 transition-colors outline-none"
                                 aria-label="Edit Front word"
                             />
                         </div>
-                        <div class="col-span-5 text-right font-medium text-slate-800" dir="rtl">
+                        <div class="col-span-5 text-right font-medium text-text-main-light" dir="rtl">
                              <input type="text"
                                 value="${word.back}"
                                 oninput="updateWord(${index}, 'back', this.value)"
-                                class="w-full bg-transparent border-b border-transparent hover:border-slate-300 focus:border-indigo-500 focus:ring-0 px-1 py-0.5 transition-colors outline-none text-right hebrew-text"
+                                class="w-full bg-transparent border-b border-transparent hover:border-gray-300 focus:border-primary focus:ring-0 px-1 py-0.5 transition-colors outline-none text-right hebrew-text"
                                 aria-label="Edit Back word"
                             />
                         </div>
                         <div class="col-span-1 flex justify-end">
                             <button onclick="deleteWord('${word.id}')" 
-                                class="text-slate-400 hover:text-red-500 transition-colors p-1 rounded-full hover:bg-red-50"
+                                class="text-gray-400 hover:text-red-500 transition-colors p-1 rounded-full hover:bg-red-50"
                                 aria-label="Delete word">
-                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                <span class="material-symbols-outlined text-[18px]">delete</span>
                             </button>
                         </div>
                     </div>
@@ -493,15 +531,15 @@
       const formBulk = document.getElementById('bulkForm');
 
       btnSingle.addEventListener('click', () => {
-        btnSingle.className = "px-3 py-1.5 rounded-full transition-colors bg-indigo-100 text-indigo-700 font-medium";
-        btnBulk.className = "px-3 py-1.5 rounded-full transition-colors text-slate-500 hover:bg-slate-50";
+        btnSingle.className = "px-3 py-1.5 rounded-full transition-colors bg-primary/10 text-primary font-medium";
+        btnBulk.className = "px-3 py-1.5 rounded-full transition-colors text-text-secondary-light hover:bg-background-light";
         formSingle.classList.remove('hidden');
         formBulk.classList.add('hidden');
       });
 
       btnBulk.addEventListener('click', () => {
-        btnBulk.className = "px-3 py-1.5 rounded-full transition-colors bg-indigo-100 text-indigo-700 font-medium";
-        btnSingle.className = "px-3 py-1.5 rounded-full transition-colors text-slate-500 hover:bg-slate-50";
+        btnBulk.className = "px-3 py-1.5 rounded-full transition-colors bg-primary/10 text-primary font-medium";
+        btnSingle.className = "px-3 py-1.5 rounded-full transition-colors text-text-secondary-light hover:bg-background-light";
         formBulk.classList.remove('hidden');
         formSingle.classList.add('hidden');
       });
@@ -646,7 +684,7 @@
         } finally {
           // Reset UI
           downloadText.textContent = originalText;
-          btnOpen.innerHTML = '<i data-lucide="external-link" class="w-4 h-4"></i><span>Open in New Tab</span>';
+          btnOpen.innerHTML = '<span class="material-symbols-outlined text-[18px]">open_in_new</span><span>Open in New Tab</span>';
           btnDownload.disabled = false;
           btnOpen.disabled = false;
           lucide.createIcons();
