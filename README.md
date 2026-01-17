@@ -1,20 +1,37 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# FlashcardGen
 
-# Run and deploy your AI Studio app
+A standalone, static HTML application for generating printable English/Hebrew flashcards.
 
-This contains everything you need to run your app locally.
+[**Live Demo**](https://rammeshulam.github.io/flashcardGen/index.html)
 
-View your app in AI Studio: https://ai.studio/apps/drive/1a7qu6afeV4e04y15jgqHmesGJGwwr6l0
+## Features
 
-## Run Locally
+*   **Zero Dependencies**: Runs entirely in the browser. No node.js, npm, or server required.
+*   **Offline Support**: Hebrew fonts are embedded directly in the file, ensuring PDF generation works even without an internet connection or on restrictive corporate networks.
+*   **Bulk Import**: Paste word lists directly from Excel or Google Sheets.
+*   **Duplex Printing**: Automatically formats PDFs for double-sided printing (Hebrew on front, English mirrored on back).
 
-**Prerequisites:**  Node.js
+## How to Run
 
+1.  Locate the `index.html` file in this folder.
+2.  Double-click to open it in any modern web browser (Chrome, Edge, Firefox, Safari).
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+## Printing Instructions
+
+1.  Add your words to the list.
+2.  Click **"Download PDF"**.
+3.  **Troubleshooting downloads**:
+    *   If clicking "Download PDF" does nothing (common when running from a local file due to browser security), click **"Open in New Tab"**.
+    *   This will open the generated PDF in a new browser tab.
+    *   From there, use your browser's print function (`Cmd+P` or `Ctrl+P`) or save the file.
+4.  **Printer Settings**:
+    *   Select **Two-Sided (Duplex)** printing.
+    *   Choose **Flip on Long Edge**.
+
+## Deployment
+
+Since the entire application is a single `index.html` file, you can deploy it by simply copying this file to:
+*   Any web server
+*   GitHub Pages
+*   Netlify / Vercel
+*   SharePoint / Internal corporate portals
