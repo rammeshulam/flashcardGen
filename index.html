@@ -34,7 +34,7 @@
         </div>
         <div>
           <h1 class="text-xl font-bold text-slate-900 tracking-tight">FlashcardGen</h1>
-          <p class="text-xs text-slate-500 font-medium">Hebrew / English Duplex Tool</p>
+          <p class="text-xs text-slate-500 font-medium">Duplex Flashcard Tool</p>
         </div>
       </div>
       <div class="flex items-center gap-2">
@@ -90,13 +90,13 @@
             <!-- Single Entry Form -->
             <form id="singleForm" class="space-y-4">
               <div>
-                <label for="inputEnglish" class="block text-sm font-medium text-slate-700 mb-1">English</label>
-                <input type="text" id="inputEnglish" placeholder="e.g. Apple"
+                <label for="inputFront" class="block text-sm font-medium text-slate-700 mb-1">Front</label>
+                <input type="text" id="inputFront" placeholder="e.g. Apple"
                   class="w-full px-4 py-2 rounded-md border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all">
               </div>
               <div>
-                <label for="inputHebrew" class="block text-sm font-medium text-slate-700 mb-1">Hebrew</label>
-                <input type="text" id="inputHebrew" dir="rtl" placeholder="e.g. תפוח"
+                <label for="inputBack" class="block text-sm font-medium text-slate-700 mb-1">Back</label>
+                <input type="text" id="inputBack" dir="rtl" placeholder="e.g. תפוח"
                   class="w-full px-4 py-2 rounded-md border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all hebrew-text">
               </div>
               <button type="submit" id="btnAddSingle" disabled
@@ -113,7 +113,8 @@
                   Paste Word List (Tab separated)
                 </label>
                 <p class="text-xs text-slate-500 mb-2">
-                  Paste from Excel/Sheets. We'll automatically detect which column is Hebrew.
+                  Paste from Excel/Sheets. We'll automatically detect which column is RTL (e.g. Hebrew) and assign it to
+                  the Back.
                 </p>
                 <textarea id="inputBulk" rows="6" placeholder="Word 1    Word 2&#10;Next      Phrase..."
                   class="w-full px-4 py-2 rounded-md border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all font-mono text-sm"></textarea>
@@ -132,7 +133,7 @@
             <p class="text-indigo-700 text-sm mb-4">
               Generates a double-sided PDF (A4).
               <br>
-              <span class="opacity-75 text-xs">Page 1: Hebrew, Page 2: English (Mirrored)</span>
+              <span class="opacity-75 text-xs">Page 1: Back (RTL), Page 2: Front (LTR, Mirrored)</span>
             </p>
             <div class="flex flex-col gap-2">
               <button id="btnDownload" disabled
@@ -166,8 +167,8 @@
           <div
             class="grid grid-cols-12 gap-4 p-4 bg-slate-50 border-b border-slate-200 text-sm font-semibold text-slate-600">
             <div class="col-span-1 text-center">#</div>
-            <div class="col-span-5">English</div>
-            <div class="col-span-5 text-right">Hebrew</div>
+            <div class="col-span-5">Front</div>
+            <div class="col-span-5 text-right">Back</div>
             <div class="col-span-1"></div>
           </div>
 
@@ -198,8 +199,8 @@
               <li>Cut along the lines.</li>
             </ol>
             <p class="mt-2 text-xs opacity-75">
-              The Hebrew side is printed on page 1, and the English side on page 2.
-              The English columns are mirrored so they align perfectly when printed back-to-back.
+              The Back side is printed on page 1, and the Front side on page 2.
+              The Front columns are mirrored so they align perfectly when printed back-to-back.
             </p>
           </div>
         </div>
@@ -250,20 +251,50 @@
   <script>
     // --- CONSTANTS ---
     const INITIAL_WORDS = [
-      { id: '1', english: "Country", hebrew: "מדינה" },
-      { id: '2', english: "First", hebrew: "ראשון" },
-      { id: '3', english: "Hard", hebrew: "קשה" },
-      { id: '4', english: "Hour", hebrew: "שעה" },
-      { id: '5', english: "How", hebrew: "איך" },
-      { id: '6', english: "Later", hebrew: "מאוחר יותר" },
-      { id: '7', english: "Many", hebrew: "הרבה" },
-      { id: '8', english: "Need", hebrew: "צריך" },
-      { id: '9', english: "Prepare", hebrew: "להתכונן" },
-      { id: '10', english: "Was", hebrew: "היה" }
+      { id: '1', front: "Country", back: "מדינה" },
+      { id: '2', front: "First", back: "ראשון" },
+      { id: '3', front: "Hard", back: "קשה" },
+      { id: '4', front: "Hour", back: "שעה" },
+      { id: '5', front: "How", back: "איך" },
+      { id: '6', front: "Later", back: "מאוחר יותר" },
+      { id: '7', front: "Many", back: "הרבה" },
+      { id: '8', front: "Need", back: "צריך" },
+      { id: '9', front: "Prepare", back: "להתכונן" },
+      { id: '10', front: "Was", back: "היה" }
     ];
 
     // --- STATE ---
     let words = [...INITIAL_WORDS];
+
+    // Check for "data" URL parameter
+    try {
+      const urlParams = new URLSearchParams(window.location.search);
+      const dataParam = urlParams.get('data');
+      if (dataParam) {
+        const parsedContext = JSON.parse(decodeURIComponent(dataParam));
+        if (Array.isArray(parsedContext)) {
+          // Normalize structure if needed, or just assume {front, back} (or english, hebrew for compat)
+          const validWords = parsedContext.map((w, i) => {
+            let front = w.front || w.english;
+            let back = w.back || w.hebrew;
+            if (front && back) {
+              return {
+                id: Date.now().toString() + i,
+                front,
+                back
+              };
+            }
+            return null;
+          }).filter(Boolean);
+
+          if (validWords.length > 0) {
+            words = validWords;
+          }
+        }
+      }
+    } catch (e) {
+      console.warn("Failed to parse 'data' URL parameter:", e);
+    }
 
     // --- PDF SERVICE LOGIC ---
 
@@ -277,7 +308,7 @@
       const payload = {
         contents: [{
           parts: [
-            { text: "Analyze this image. It contains a list of English and Hebrew word pairs. Extract them into a JSON array of objects with 'english' and 'hebrew' keys. Return ONLY the JSON array, no markdown formatting." },
+            { text: "Analyze this image. It contains a list of word pairs. Extract them into a JSON array of objects with 'front' and 'back' keys. If the words are in Hebrew and English, treat English as 'front' and Hebrew as 'back'. Return ONLY the JSON array, no markdown formatting." },
             { inline_data: { mime_type: "image/jpeg", data: base64Data } }
           ]
         }]
@@ -344,9 +375,9 @@
         throw new Error("Could not load Hebrew font. Please check your internet connection.");
       }
 
-      const drawPage = (isHebrew, pageWords) => {
+      const drawPage = (isBack, pageWords) => {
         doc.setFontSize(24);
-        if (isHebrew) {
+        if (isBack) {
           doc.setFont(FONT_NAME, "normal");
         } else {
           doc.setFont("helvetica", "normal");
@@ -357,15 +388,15 @@
           const originalCol = index % COLS;
 
           let col = originalCol;
-          if (!isHebrew) {
+          if (!isBack) {
             col = 1 - originalCol;
           }
 
           const x = (col * CELL_WIDTH) + (CELL_WIDTH / 2);
           const y = (row * CELL_HEIGHT) + (CELL_HEIGHT / 2);
 
-          let text = isHebrew ? pair.hebrew : pair.english;
-          if (isHebrew) {
+          let text = isBack ? pair.back : pair.front;
+          if (isBack) {
             text = fixHebrewText(text);
           }
           text = sanitizeForPdf(text);
@@ -418,18 +449,18 @@
                         </div>
                         <div class="col-span-5 font-medium text-slate-800">
                              <input type="text"
-                                value="${word.english}"
-                                oninput="updateWord(${index}, 'english', this.value)"
+                                value="${word.front}"
+                                oninput="updateWord(${index}, 'front', this.value)"
                                 class="w-full bg-transparent border-b border-transparent hover:border-slate-300 focus:border-indigo-500 focus:ring-0 px-1 py-0.5 transition-colors outline-none"
-                                aria-label="Edit English word"
+                                aria-label="Edit Front word"
                             />
                         </div>
                         <div class="col-span-5 text-right font-medium text-slate-800" dir="rtl">
                              <input type="text"
-                                value="${word.hebrew}"
-                                oninput="updateWord(${index}, 'hebrew', this.value)"
+                                value="${word.back}"
+                                oninput="updateWord(${index}, 'back', this.value)"
                                 class="w-full bg-transparent border-b border-transparent hover:border-slate-300 focus:border-indigo-500 focus:ring-0 px-1 py-0.5 transition-colors outline-none text-right hebrew-text"
-                                aria-label="Edit Hebrew word"
+                                aria-label="Edit Back word"
                             />
                         </div>
                         <div class="col-span-1 flex justify-end">
@@ -462,11 +493,11 @@
       }
     };
 
-    function addWord(english, hebrew) {
+    function addWord(front, back) {
       const word = {
         id: Date.now().toString() + Math.random().toString(36).substr(2, 5),
-        english,
-        hebrew
+        front,
+        back
       };
       words = [...words, word];
       renderList();
@@ -505,28 +536,28 @@
       });
 
       // Single Entry Input Logic
-      const inputEnglish = document.getElementById('inputEnglish');
-      const inputHebrew = document.getElementById('inputHebrew');
+      const inputFront = document.getElementById('inputFront');
+      const inputBack = document.getElementById('inputBack');
       const btnAddSingle = document.getElementById('btnAddSingle');
 
       function checkSingleInputs() {
-        const hasContent = inputEnglish.value.trim() && inputHebrew.value.trim();
+        const hasContent = inputFront.value.trim() && inputBack.value.trim();
         btnAddSingle.disabled = !hasContent;
       }
 
-      inputEnglish.addEventListener('input', checkSingleInputs);
-      inputHebrew.addEventListener('input', checkSingleInputs);
+      inputFront.addEventListener('input', checkSingleInputs);
+      inputBack.addEventListener('input', checkSingleInputs);
 
       formSingle.addEventListener('submit', (e) => {
         e.preventDefault();
-        if (!inputEnglish.value.trim() || !inputHebrew.value.trim()) return;
+        if (!inputFront.value.trim() || !inputBack.value.trim()) return;
 
-        addWord(inputEnglish.value.trim(), inputHebrew.value.trim());
+        addWord(inputFront.value.trim(), inputBack.value.trim());
 
-        inputEnglish.value = '';
-        inputHebrew.value = '';
+        inputFront.value = '';
+        inputBack.value = '';
         checkSingleInputs();
-        inputEnglish.focus();
+        inputFront.focus();
       });
 
       // Bulk Entry Logic
@@ -567,16 +598,16 @@
           const col1IsHebrew = hebrewRegex.test(col1);
           const col2IsHebrew = hebrewRegex.test(col2);
 
-          let eng = col1;
-          let heb = col2;
+          let front = col1;
+          let back = col2;
 
           if (col1IsHebrew && !col2IsHebrew) {
-            eng = col2;
-            heb = col1;
+            front = col2;
+            back = col1;
           }
 
-          if (eng && heb) {
-            addWord(eng, heb);
+          if (front && back) {
+            addWord(front, back);
             addedCount++;
           }
         });
@@ -703,8 +734,11 @@
               let addedCount = 0;
               if (Array.isArray(result)) {
                 result.forEach(pair => {
-                  if (pair.english && pair.hebrew) {
-                    addWord(pair.english, pair.hebrew);
+                  let front = pair.english || pair.front; // Support both
+                  let back = pair.hebrew || pair.back;
+
+                  if (front && back) {
+                    addWord(front, back);
                     addedCount++;
                   }
                 });

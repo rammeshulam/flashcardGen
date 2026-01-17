@@ -1,17 +1,26 @@
 # FlashcardGen
 
-A standalone, static HTML application for generating printable English/Hebrew flashcards.
+A standalone, static HTML application for generating printable Duplex (Two-Sided) flashcards.
 
 [**Live Demo**](https://rammeshulam.github.io/flashcardGen/index.html)
 
 ## Features
 
 *   **Zero Dependencies**: Runs entirely in the browser. No node.js, npm, or server required.
-*   **Offline Support**: Hebrew fonts are embedded directly in the file, ensuring PDF generation works even without an internet connection (AI features require internet).
+*   **Offline Support**: Fonts are embedded directly in the file, ensuring PDF generation works even without an internet connection (AI features require internet).
 *   **AI Image Scanning**: Extract word pairs directly from images using Google Gemini API.
-*   **Smart Bulk Import**: Paste word lists from Excel/Sheets. Automatically detects Hebrew/English columns and replaces the current list.
+*   **Smart Bulk Import**: Paste word lists from Excel/Sheets. Automatically detects RTL/LTR columns and assigns them to Back/Front.
+*   **URL Loading**: Pre-load word lists via a URL parameter (`?data=[...]`) for easy sharing.
 *   **Inline Editing**: Click any word in the list to edit it directly.
-*   **Duplex Printing**: Automatically formats PDFs for double-sided printing (Hebrew on front, English mirrored on back).
+*   **Duplex Printing**: Automatically formats PDFs for double-sided printing (Back on page 1, Front mirrored on page 2).
+
+## Sharing Lists via URL
+
+You can pre-load a specific word list by adding a `data` query parameter to the URL. The data must be a URL-encoded JSON array of objects with `front` and 'back` keys.
+
+**Example URL:**
+`index.html?data=[{"front":"Hello","back":"Shalom"},{"front":"Cat","back":"Chatul"}]`
+*(Note: Use a tool to URL-encode the JSON string)*
 
 ## How to Run
 
